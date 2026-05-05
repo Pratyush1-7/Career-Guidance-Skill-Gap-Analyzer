@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guidance & Skill Gap Analyzer - NIST University</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-ui: 'Plus Jakarta Sans', sans-serif;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --glass-blur: blur(12px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            letter-spacing: -0.02em;
+        }
+
+        button {
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 14px 0 var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Screen Transitions */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header Styles */
+        .hero-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            color: white;
+            font-family: var(--font-ui);
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .skills-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 40px;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .remove-skill {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-radius: 0.5rem;
+            height: 40px;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* API Key Section */
+        .api-key-container {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px dashed var(--accent-color);
+            border-radius: 1rem;
+        }
+
+        /* Loading Screen */
+        .loader-container {
+            text-align: center;
+            padding: 5rem 0;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.5rem;
+            height: 20px;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .rotating-message {
+            margin-top: 2rem;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            font-family: var(--font-heading);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-main { grid-template-columns: 1fr; }
+        }
+
+        .radar-container {
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .skill-list-card {
+            height: 100%;
+        }
+
+        .skill-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .skill-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .missing-skill-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .badge-high { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-medium { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .badge-low { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+        /* Roadmap Timeline */
+        .roadmap-container {
+            position: relative;
+            margin: 3rem 0;
+            padding-left: 2rem;
+        }
+
+        .roadmap-container::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .roadmap-phase {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .roadmap-phase::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: var(--accent-color);
+            transform: translateX(-50%);
+            box-shadow: 0 0 0 4px var(--bg-color), 0 0 10px var(--accent-glow);
+        }
+
+        .phase-content {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .phase-duration {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.93rem;
+        }
+
+        .task-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        /* Course Cards */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .course-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .course-platform {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        /* Final sections */
+        .bottom-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .bottom-sections { grid-template-columns: 1fr; }
+        }
+
+        .footer {
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SCREEN 1: INPUT FORM -->
+        <div id="screen-input" class="screen active">
+            <header class="hero-header">
+                <h1>NIST Career Analyzer</h1>
+                <p>Map your engineering journey with AI-driven pathfinding</p>
+            </header>
+
+            <div class="api-key-container">
+                <label for="gemini-api-key">Gemini API Key Required</label>
+                <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key (starts with AIza...)">
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Your key is used locally only for generating your personal analysis.</p>
+            </div>
+
+            <div class="card">
+                <form id="career-form">
+                    <div id="form-error" class="error-message" style="display: none;"></div>
+                    
+                    <div class="dashboard-main">
+                        <div>
+                            <div class="form-group">
+                                <label for="full-name">Full Name</label>
+                                <input type="text" id="full-name" placeholder="E.g. Siddharth Mishra" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="branch">Branch</label>
+                                <select id="branch" required>
+                                    <option value="" disabled selected>Select your branch</option>
+                                    <option value="CSE">Computer Science & Engineering</option>
+                                    <option value="ECE">Electronics & Communication</option>
+                                    <option value="EE">Electrical Engineering</option>
+                                    <option value="ME">Mechanical Engineering</option>
+                                    <option value="CE">Civil Engineering</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label for="year">Year of Study</label>
+                                <select id="year" required>
+                                    <option value="" disabled selected>Select current year</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="target-role">Target Career Role</label>
+                                <input type="text" id="target-role" placeholder="E.g. Fullstack Developer, AI Engineer" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Current Skills & Proficiency</label>
+                        <div id="skills-list" class="skills-grid">
+                            <!-- Skill rows will be injected here -->
+                        </div>
+                        <button type="button" class="btn-outline" id="add-skill-btn">+ Add Skill</button>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button type="submit" class="btn-primary" style="width: 100%; max-width: 400px; font-size: 1.1rem; padding: 1rem;">
+                            Analyze My Career Path
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: LOADING -->
+        <div id="screen-loading" class="screen">
+            <div class="loader-container">
+                <div class="spinner"></div>
+                <div class="rotating-message" id="loading-text">Analyzing your profile...</div>
+                
+                <div style="margin-top: 4rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    <div class="skeleton" style="width: 100%; height: 100px;"></div>
+                    <div class="skeleton" style="width: 80%;"></div>
+                    <div class="skeleton" style="width: 90%;"></div>
+                    <div class="skeleton" style="width: 70%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RESULTS DASHBOARD -->
+        <div id="screen-results" class="screen">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="result-name-heading" style="font-size: 2rem;">Siddharth's Dashboard</h2>
+                    <p id="result-role-text" style="color: var(--accent-color); font-weight: 600;">Target: Fullstack Web Developer</p>
+                </div>
+                <button class="btn-outline" onclick="resetApp()">Start Over</button>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="card metric-card">
+                    <div class="metric-value"><span id="metric-gap">0</span>%</div>
+                    <div class="text-secondary">Overall Skill Gap</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-value" style="color: var(--success);"><span id="metric-matched">0</span></div>
+                    <div class="text-secondary">Matched Skills</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-value" style="color: var(--warning);"><span id="metric-develop">0</span></div>
+                    <div class="text-secondary">Skills to Develop</div>
+                </div>
+            </div>
+
+            <div class="dashboard-main">
+                <div class="card">
+                    <h3>Skill Distribution</h3>
+                    <div class="radar-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                <div class="card skill-list-card">
+                    <h3>Skill Comparison</h3>
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="color: var(--success); margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase;">Matched Industry Standards</h4>
+                        <div id="matched-skills-container"></div>
+                        
+                        <h4 style="color: var(--warning); margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; margin-top: 2rem;">Critical Gaps Identified</h4>
+                        <div id="missing-skills-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h3>3-Phase Learning Roadmap</h3>
+                <div id="roadmap-container" class="roadmap-container">
+                    <!-- Phases injected here -->
+                </div>
+            </div>
+
+            <h3>Recommended Courses</h3>
+            <div id="courses-container" class="courses-grid">
+                <!-- Courses injected here -->
+            </div>
+
+            <div class="bottom-sections">
+                <div class="card">
+                    <h3>Top Certifications</h3>
+                    <div id="certifications-container" style="margin-top: 1rem;"></div>
+                </div>
+                <div class="card">
+                    <h3>Strategic Project Ideas</h3>
+                    <div id="projects-container" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <p>© 2026 NIST University Engineering Career Guidance Portal. AI-powered analysis is based on current industry trends. For academic queries, visit the placement office.</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let skillsCount = 0;
+        let radarChartInstance = null;
+
+        // Initialize App
+        function init() {
+            // Pre-fill 3 skills
+            for(let i=0; i<3; i++) {
+                addSkillRow();
+            }
+        }
+
+        // Skill Row Management
+        function addSkillRow(skill = '', level = 'Beginner') {
+            skillsCount++;
+            const id = `skill-${Date.now()}-${skillsCount}`;
+            const container = document.getElementById('skills-list');
+            
+            const div = document.createElement('div');
+            div.className = 'skill-row';
+            div.id = id;
+            div.innerHTML = `
+                <input type="text" placeholder="Skill name" value="${skill}" required>
+                <select required>
+                    <option value="Beginner" ${level === 'Beginner' ? 'selected' : ''}>Beginner</option>
+                    <option value="Intermediate" ${level === 'Intermediate' ? 'selected' : ''}>Intermediate</option>
+                    <option value="Advanced" ${level === 'Advanced' ? 'selected' : ''}>Advanced</option>
+                </select>
+                <button type="button" class="remove-skill" onclick="removeSkillRow('${id}')">×</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeSkillRow(id) {
+            const row = document.getElementById(id);
+            if(document.querySelectorAll('.skill-row').length > 1) {
+                row.remove();
+            }
+        }
+
+        // UI Helpers
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function rotateMessages() {
+            const messages = [
+                "Analyzing your profile...",
+                "Comparing industry standards...",
+                "Mapping skill gaps...",
+                "Building your roadmap...",
+                "Searching for recommended courses...",
+                "Finalizing your career blueprint..."
+            ];
+            let index = 0;
+            const messageEl = document.getElementById('loading-text');
+            const interval = setInterval(() => {
+                index = (index + 1) % messages.length;
+                if(document.getElementById('screen-loading').classList.contains('active')) {
+                    messageEl.innerText = messages[index];
+                } else {
+                    clearInterval(interval);
+                }
+            }, 2500);
+        }
+
+        // AI Logic
+        async function runAnalysis(formData) {
+            const apiKey = document.getElementById('gemini-api-key').value.trim();
+            if(!apiKey) {
+                throw new Error("Please provide your Gemini API key.");
+            }
+
+            const prompt = `
+                You are a career advisor for engineering students at NIST University, Berhampur. 
+                Analyze the following student profile:
+                - Name: ${formData.name}
+                - Branch: ${formData.branch}
+                - Year: ${formData.year}
+                - Target Career Role: ${formData.targetRole}
+                - Current Skills: ${JSON.stringify(formData.skills)}
+
+                Evaluate based on modern technology standards for the year 2026.
+                Provide a skill gap analysis and a 3-phase roadmap.
+                Output ONLY a valid JSON object without markdown formatting.
+                
+                Expected JSON Schema:
+                {
+                    "gapPercentage": number (0-100),
+                    "matchedSkills": [{"skill": string, "coverage": number (0-100)}],
+                    "missingSkills": [{"skill": string, "priority": "HIGH"|"MEDIUM"|"LOW", "reason": string}],
+                    "radarData": {"Programming": number, "WebDev": number, "DataAI": number, "DevOps": number, "Cloud": number, "SoftSkills": number},
+                    "courses": [{"name": string, "platform": string}],
+                    "certifications": [{"name": string, "provider": string}],
+                    "projects": [{"title": string, "description": string}],
+                    "roadmap": [{"phase": 1|2|3, "title": string, "durationWeeks": number, "tasks": [string]}]
+                }
+            `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if(!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "API request failed");
+                }
+
+                const data = await response.json();
+                let text = data.candidates[0].content.parts[0].text;
+                
+                // Clean markdown fences if present
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                
+                return JSON.parse(text);
+            } catch (err) {
+                console.error("AI Error:", err);
+                throw err;
+            }
+        }
+
+        // Render Logic
+        function renderResults(data, formInput) {
+            // Header
+            document.getElementById('result-name-heading').innerText = `${formInput.name.split(' ')[0]}'s Dashboard`;
+            document.getElementById('result-role-text').innerText = `Target Role: ${formInput.targetRole}`;
+
+            // Metrics
+            document.getElementById('metric-gap').innerText = data.gapPercentage;
+            document.getElementById('metric-matched').innerText = data.matchedSkills.length;
+            document.getElementById('metric-develop').innerText = data.missingSkills.length;
+
+            // Radar Chart
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if(radarChartInstance) radarChartInstance.destroy();
+            
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(data.radarData),
+                    datasets: [{
+                        label: 'Your Profile',
+                        data: Object.values(data.radarData),
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: '#3b82f6',
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#3b82f6'
+                    }, {
+                        label: 'Industry Benchmark',
+                        data: [85, 80, 75, 70, 75, 90], // Average target bench
+                        fill: true,
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        pointBackgroundColor: 'transparent',
+                        pointBorderColor: 'transparent',
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans' } },
+                            ticks: { display: false },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { family: 'Plus Jakarta Sans' } } }
+                    }
+                }
+            });
+
+            // Matched Skills
+            const matchedContainer = document.getElementById('matched-skills-container');
+            matchedContainer.innerHTML = data.matchedSkills.map(s => `
+                <div class="skill-item">
+                    <div class="skill-info">
+                        <span>${s.skill}</span>
+                        <span>${s.coverage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${s.coverage}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Missing Skills
+            const missingContainer = document.getElementById('missing-skills-container');
+            missingContainer.innerHTML = data.missingSkills.map(s => `
+                <div class="missing-skill-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;">${s.skill}</span>
+                        <span class="badge badge-${s.priority.toLowerCase()}">${s.priority} Priority</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">${s.reason}</p>
+                </div>
+            `).join('');
+
+            // Roadmap
+            const roadmapContainer = document.getElementById('roadmap-container');
+            const colors = { 1: '#3b82f6', 2: '#f59e0b', 3: '#10b981' };
+            roadmapContainer.innerHTML = data.roadmap.map(p => `
+                <div class="roadmap-phase" style="--accent-color: ${colors[p.phase]}; --accent-glow: ${colors[p.phase]}66;">
+                    <div class="phase-content">
+                        <div class="phase-header">
+                            <h4 style="color: ${colors[p.phase]}">Phase ${p.phase}: ${p.title}</h4>
+                            <span class="phase-duration">${p.durationWeeks} Weeks</span>
+                        </div>
+                        <ul class="task-list">
+                            ${p.tasks.map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `).join('');
+
+            // Courses
+            const coursesContainer = document.getElementById('courses-container');
+            coursesContainer.innerHTML = data.courses.map(c => `
+                <div class="card course-card">
+                    <span class="course-platform">${c.platform}</span>
+                    <h4 style="font-size: 1.1rem;">${c.name}</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Industry recognized specialized learning path.</p>
+                </div>
+            `).join('');
+
+            // Bottom elements
+            const certsContainer = document.getElementById('certifications-container');
+            certsContainer.innerHTML = data.certifications.map(c => `
+                <div style="margin-bottom: 1rem; padding-left: 1rem; border-left: 2px solid var(--accent-color);">
+                    <div style="font-weight: 600;">${c.name}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">${c.provider}</div>
+                </div>
+            `).join('');
+
+            const projectsContainer = document.getElementById('projects-container');
+            projectsContainer.innerHTML = data.projects.map(p => `
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="font-weight: 600; color: var(--accent-color);">${p.title}</div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">${p.description}</p>
+                </div>
+            `).join('');
+        }
+
+        // App Control
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const errorEl = document.getElementById('form-error');
+            errorEl.style.display = 'none';
+
+            // Gather Data
+            const name = document.getElementById('full-name').value;
+            const branch = document.getElementById('branch').value;
+            const year = document.getElementById('year').value;
+            const targetRole = document.getElementById('target-role').value;
+            
+            const skills = [];
+            document.querySelectorAll('.skill-row').forEach(row => {
+                const nameInput = row.querySelector('input').value;
+                const levelSelect = row.querySelector('select').value;
+                if(nameInput.trim()) {
+                    skills.push({ skill: nameInput.trim(), level: levelSelect });
+                }
+            });
+
+            if(skills.length === 0) {
+                errorEl.innerText = "Please add at least one current skill.";
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const formData = { name, branch, year, targetRole, skills };
+            
+            showScreen('screen-loading');
+            rotateMessages();
+
+            try {
+                const results = await runAnalysis(formData);
+                renderResults(results, formData);
+                showScreen('screen-results');
+            } catch (err) {
+                showScreen('screen-input');
+                errorEl.innerText = "Error: " + err.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function resetApp() {
+            showScreen('screen-input');
+            document.getElementById('career-form').reset();
+            document.getElementById('skills-list').innerHTML = '';
+            for(let i=0; i<3; i++) addSkillRow();
+        }
+
+        // Event Listeners
+        document.getElementById('add-skill-btn').addEventListener('click', () => addSkillRow());
+        document.getElementById('career-form').addEventListener('submit', handleFormSubmit);
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
